@@ -19,7 +19,6 @@
   NOTICE :
   Original of this code is https://github.com/tommccracken/sph-fluid-simulation
   the following revise has done by Yasuo Ichinose
-  - impose scenes restriction
   - impose spatial_partitioning_mode restriction
 
 */
@@ -209,7 +208,7 @@ function resize_canvas() {
 
 function initialise() {
   // Load the currently selected scene
-  scene_loader.call();
+  scenes[$("#scene_list").prop('selectedIndex')][1].call();
   // Reinitialise the spatial partitioning mode
   reinitialise_spatial_partitioning();
   // Resize the canvas
@@ -227,6 +226,14 @@ function initialise() {
 
 }
 
+$('#scene_list').on('change', function () {
+  // Reinitialise if a different scene has been selected. Give the garbage collector an opportunity to clear scenes with large numbers of world elements.
+  let pause_state = paused;
+  if (!paused) {
+    paused = true;
+  }
+  setTimeout(function () { initialise(); paused = pause_state; }, 100);
+});
 
 function reinitialise_spatial_partitioning() {
   let index = 1;
@@ -277,6 +284,8 @@ $(window).resize(function () {
 });
 
 $(document).ready(function () {
+  // Populate the scenes select list with the available scenes
+  populate_select_lists();
   // Set the initial state of debug_mode to false
   $('#debug_checkbox').prop('checked', false);
   debug_mode = false;
@@ -288,6 +297,17 @@ $(document).ready(function () {
   // Initialise the scene
   initialise();
 });
+
+function populate_select_lists() {
+  for (let count = 0; count < scenes.length; count++) {
+    //scene = scenes[count]
+    $('#scene_list').append($('<option>', {
+      value: scenes[count],
+      text: scenes[count][0]
+    }));
+  }
+  $("#scene_list").prop('selectedIndex', 0);
+}
 
 $('#debug_checkbox').change(function () {
   debug_mode = $(this).prop('checked');
